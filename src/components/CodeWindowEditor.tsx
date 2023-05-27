@@ -6,12 +6,16 @@ import Editor from "react-monaco-editor";
 import 'monaco-yaml/yaml.worker.js';
 import {setDiagnosticsOptions} from "monaco-yaml";
 
+import { Uri } from 'monaco-editor';
+
 interface MonacoEditorProps {
     onChange : (code: string, value: string) => void,
     language : string,
     code     : string,
     theme    : string
 }
+
+const modelUri = Uri.parse('a://b/foo.yaml');
 
 setDiagnosticsOptions({
     enableSchemaRequest : true,
@@ -29,7 +33,7 @@ window.MonacoEnvironment = {
             default:
                 throw new Error(`Unknown label ${label}`);
         }
-    }
+    },
 };
 
 const CodeEditorWindow = ({ onChange, language, code, theme }: MonacoEditorProps) => {
