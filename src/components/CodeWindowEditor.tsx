@@ -15,7 +15,7 @@ interface MonacoEditorProps {
     theme    : string
 }
 
-const modelUri = Uri.parse('a://b/foo.yaml');
+Uri.parse('a://b/foo.yaml');
 
 setDiagnosticsOptions({
     enableSchemaRequest : true,
