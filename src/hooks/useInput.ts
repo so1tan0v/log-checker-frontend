@@ -7,7 +7,6 @@ export default function useInput ( defaultValue: string = '' ) {
 
     const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setValue(event.target.value);
-        console.log(value);
     }
 
     return {

@@ -57,10 +57,10 @@ export default function LeftPanel() {
             {loading && <Loader />}
             <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
                 <ul className="space-y-2 font-medium">
-                     {lpuList?.map(lpu => {
+                     {lpuList?.map((lpu, key) => {
                          if(lpu.childElements) {
                              return (
-                                 <li>
+                                 <li key={`${key}-${lpu.name}`}>
                                      <div>
                                          <button type="button" onClick={displayChildElements} className="w-full flex items-center p-2 text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-500">
                                              <span className="flex-1 ml-3 text-left whitespace-nowrap">{lpu.titleName}</span>
@@ -68,9 +68,10 @@ export default function LeftPanel() {
                                          </button>
                                          <ul id="dropdown-example" className="hidden py-2 space-y-2">
                                              {lpu.childElements.map(childLpu => {
+                                                 const fullName = `${lpu.name}-${childLpu.name}`;
                                                  return (
-                                                     <li>
-                                                         <button onClick={onClickButtonHandler} id={`${lpu.name}-${childLpu.name}`} className={'w-full'}>
+                                                     <li key={fullName}>
+                                                         <button onClick={onClickButtonHandler} id={fullName} className={'w-full'}>
                                                              <span className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-500">
                                                                  {childLpu.titleName}
                                                              </span>
@@ -84,7 +85,7 @@ export default function LeftPanel() {
                              )
                          } else {
                              return (
-                                 <li>
+                                 <li key={`${key}-${lpu.name}`}>
                                      <button onClick={onClickButtonHandler} id={lpu.name} className="w-full flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500">
                                         <span className="ml-3">{lpu.titleName}</span>
                                      </button>

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {useSearchParams} from "react-router-dom";
 
 import CodeEditorWindow from "../components/CodeWindowEditor";
@@ -8,27 +8,36 @@ import {isEmpty} from "lodash";
 
 import {getFileByLpuIdAndType} from "../helper";
 import {store} from "../store/store";
-import {ISelectedLpu} from "../interface";
-import {selectLpu} from "../store/actions";
-import axios from "axios";
+import axios, {AxiosError} from "axios";
 
 
-export default function StartPage() {
+export default function EditorPage() {
     let [searchParams, setSearchParams] = useSearchParams();
 
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [selectedLpu, setSelectedLpu] = useState({name: '', availableLpuTypes: ['']});
 
     const lpu= searchParams.get('lpu');
     let fileType= searchParams.get('fileType') ?? 'yaml'
     let lpuType= searchParams.get('lpuType') ?? 'Амбулатория'
 
+    if((!selectedLpu || !selectedLpu.name) && lpu) {
+        const selectedLpu = store.getState().availableLpu.find(item => item.name === lpu);
+        if(selectedLpu) {
+            setSelectedLpu({
+                name              : selectedLpu.name,
+                availableLpuTypes : selectedLpu.availableLpuTypes
+            });
+        }
+    }
+
+
     const changeCode = (action:string, data:string) => {
         switch (action) {
-            case "code": {
+            case "code":
                 return setCode(data);
-            }
             default: {
                 console.warn("case not handled!", action, data);
             }
@@ -64,20 +73,25 @@ export default function StartPage() {
         }
 
         setLoading(true);
-        await axios.post('/api/sendNodeFile', {
-            id: lpu,
-            fileType,
-            lpuType,
-            node: fileType === 'error'
-                ? ''
-                : code ?? ''
-        })
+        try {
+            await axios.post('/api/sendNodeFile', {
+                id: lpu,
+                fileType,
+                lpuType,
+                node: fileType === 'error'
+                    ? ''
+                    : code ?? ''
+            })
+        } catch (e: any) {
+            setLoading(false);
+            setError(e.message)
+        }
         setLoading(false);
 
         getFile();
     }
 
-    const getFile = () => {
+    const getFile = useCallback(() => {
         setLoading(true)
         setError('');
         if(lpu)
@@ -90,27 +104,22 @@ export default function StartPage() {
                     setLoading(false);
                     setError(`Произошла ошибка. Обратитесь к @sasha в ТАДАМе: \n\r ${error.message}`);
                 });
-    }
+    }, [lpu, fileType, lpuType]);
 
     useEffect( () => {
         getFile()
-    }, [lpu, fileType, lpuType]);
+    }, [getFile]);
 
-    let selectedLpu : ISelectedLpu = store.getState().selectLpu;
-    if(!selectedLpu && lpu) {
-        const selectedLpu = store.getState().availableLpu.find(item => item.name === lpu);
-        if(selectedLpu) {
-            selectLpu({
-                name: selectedLpu.name,
-                availableLpuTypes: selectedLpu.availableLpuTypes
-            });
-        }
-    }
 
     const codeEdit = loading
         ?  (
             <div>
-                {fileType === 'error' && <div className={'text-amber-700 font-bold'}>Загрузка может происходит долго, т.к файлы лога могу весить очень много. <br />Рекомендуется такие логи очищать (они не удаляются, а заменяются на пустой. Старый лог остается)</div>}
+                {fileType === 'error'
+                    &&
+                    <div className={'text-amber-700 font-bold'}>
+                        Загрузка может происходит долго, т.к файлы лога могу весить очень много. <br />Рекомендуется такие логи очищать (они не удаляются, а заменяются на пустой. Старый лог остается)
+                    </div>
+                }
                 <Loader/>
             </div>
         )
@@ -121,12 +130,15 @@ export default function StartPage() {
                 </div>)
                 : (
                     <div className={'pb-5'}>
-                        <div className={'w-full'}>{fileType === 'error' ? 'Текст ошибок' : 'Конфигурационный файл'}</div>
+                        <div className={'w-full'}>
+                            {fileType === 'error' ? 'Текст ошибок' : 'Конфигурационный файл'}
+                        </div>
                         <CodeEditorWindow
-                            code={code}
-                            onChange={changeCode}
-                            language={fileType}
-                            theme={'oceanic-next'}/>
+                            code     = {code}
+                            onChange = {changeCode}
+                            language = {fileType}
+                            theme    = {'oceanic-next'
+                        }/>
                     </div>
                 )
         )
@@ -143,11 +155,10 @@ export default function StartPage() {
                     <>
                         <div className={'items-center flex justify-between text-white'}>
                             <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
-
                                 {
                                     selectedLpu?.availableLpuTypes?.map(item => {
                                         return (
-                                            <li className="mr-2">
+                                            <li className="mr-2" key={item}>
                                                 <button onClick={onClickLpuTypeTabs} id={item}
                                                         className={lpuType === item ? SELECTED_TAB : UNSELECTED_TAB}>
                                                     {item}
@@ -156,21 +167,6 @@ export default function StartPage() {
                                         )
                                     })
                                 }
-
-
-                                {/*<li className="mr-2">*/}
-                                {/*    <button onClick={onClickLpuTypeTabs} id={'Амбулатория'}*/}
-                                {/*            className={lpuType === 'Амбулатория' ? SELECTED_TAB : UNSELECTED_TAB}>*/}
-                                {/*        {'Амбулатория'}*/}
-                                {/*    </button>*/}
-                                {/*</li>*/}
-
-                                {/*<li className="mr-2">*/}
-                                {/*    <button onClick={onClickLpuTypeTabs} id={'Стационар'}*/}
-                                {/*            className={lpuType === 'Стационар' ? SELECTED_TAB : UNSELECTED_TAB}>*/}
-                                {/*        Стационар*/}
-                                {/*    </button>*/}
-                                {/*</li>*/}
                             </ul>
                             <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
                                 <li className="mr-2">

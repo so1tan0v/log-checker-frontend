@@ -7,7 +7,6 @@ export function selectLpu (state: ISelectedLpu) {
         type: SELECTED_LPU,
         payload: state
     })
-    console.log(store.getState())
 }
 
 export function availableLpu (state: Array<ILpu>) {
@@ -15,5 +14,4 @@ export function availableLpu (state: Array<ILpu>) {
         type: AVAILABLE_LPU,
         payload: state
     })
-    console.log(store.getState())
 }
