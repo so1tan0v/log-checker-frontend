@@ -1,16 +1,16 @@
 import {combineReducers} from "redux";
-import {ILpu, ISelectedLpu} from "../interface";
-import {AVAILABLE_LPU, SELECTED_LPU} from "../consts";
+import {ILpu} from "../interface";
+import {AVAILABLE_LPU} from "../consts";
 
-const initSelectLpuRState = '';
-function selectLpuReducer(state = initSelectLpuRState, action: {type: string, payload: ISelectedLpu}) {
-    switch (action.type) {
-        case SELECTED_LPU:
-          return action.payload
-        default:
-          return state
-      }
-}
+// const initSelectLpuRState = '';
+// function selectLpuReducer(state = initSelectLpuRState, action: {type: string, payload: ISelectedLpu}) {
+//     switch (action.type) {
+//         case SELECTED_LPU:
+//           return action.payload
+//         default:
+//           return state
+//       }
+// }
 
 const initAvailableLpuState: Array<ILpu> = [];
 function availableLpuReducer(state = initAvailableLpuState, action: {type: string, payload: Array<ILpu>}) {
@@ -23,6 +23,6 @@ function availableLpuReducer(state = initAvailableLpuState, action: {type: strin
 }
 
 export const rootReducer = combineReducers({
-    selectLpu    : selectLpuReducer,
+    // selectLpu    : selectLpuReducer,
     availableLpu : availableLpuReducer
 })

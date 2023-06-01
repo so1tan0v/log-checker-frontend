@@ -3,9 +3,11 @@ export interface ILpu {
     name              : string,
     availableLpuTypes : Array<string>
     childElements     ?: Array<ILpu>
+    readonly          : boolean
 }
 
 export interface ISelectedLpu {
     name              : string
     availableLpuTypes : Array<string>
+    readonly          ?: boolean
 }

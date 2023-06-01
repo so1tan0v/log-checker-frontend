@@ -8,7 +8,8 @@ import {isEmpty} from "lodash";
 
 import {getFileByLpuIdAndType} from "../helper";
 import {store} from "../store/store";
-import axios, {AxiosError} from "axios";
+import axios from "axios";
+// import {selectLpu} from "../store/actions";
 
 
 export default function EditorPage() {
@@ -17,19 +18,21 @@ export default function EditorPage() {
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [selectedLpu, setSelectedLpu] = useState({name: '', availableLpuTypes: ['']});
+    const [selectedLpu, setSelectedLpu] = useState({name: '', availableLpuTypes: [''], readonly: false});
 
     const lpu= searchParams.get('lpu');
     let fileType= searchParams.get('fileType') ?? 'yaml'
     let lpuType= searchParams.get('lpuType') ?? 'Амбулатория'
 
-    if((!selectedLpu || !selectedLpu.name) && lpu) {
+    if((!selectedLpu || !selectedLpu.name || selectedLpu.name !== lpu) && lpu) {
         const selectedLpu = store.getState().availableLpu.find(item => item.name === lpu);
         if(selectedLpu) {
             setSelectedLpu({
                 name              : selectedLpu.name,
-                availableLpuTypes : selectedLpu.availableLpuTypes
+                availableLpuTypes : selectedLpu.availableLpuTypes,
+                readonly          : selectedLpu.readonly
             });
+            // selectLpu(selectedLpu);
         }
     }
 
@@ -137,8 +140,8 @@ export default function EditorPage() {
                             code     = {code}
                             onChange = {changeCode}
                             language = {fileType}
-                            theme    = {'oceanic-next'
-                        }/>
+                            theme    = {'oceanic-next'}
+                        />
                     </div>
                 )
         )
@@ -159,8 +162,10 @@ export default function EditorPage() {
                                     selectedLpu?.availableLpuTypes?.map(item => {
                                         return (
                                             <li className="mr-2" key={item}>
-                                                <button onClick={onClickLpuTypeTabs} id={item}
-                                                        className={lpuType === item ? SELECTED_TAB : UNSELECTED_TAB}>
+                                                <button onClick={onClickLpuTypeTabs}
+                                                        id={item}
+                                                        className={lpuType === item ? SELECTED_TAB : UNSELECTED_TAB}
+                                                >
                                                     {item}
                                                 </button>
                                             </li>
@@ -170,21 +175,28 @@ export default function EditorPage() {
                             </ul>
                             <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
                                 <li className="mr-2">
-                                    <button onClick={onClickFileTypeTabs} id={'yaml'}
-                                            className={fileType === 'yaml' ? SELECTED_TAB : UNSELECTED_TAB}>
+                                    <button onClick={onClickFileTypeTabs}
+                                            id={'yaml'}
+                                            className={fileType === 'yaml' ? SELECTED_TAB : UNSELECTED_TAB}
+                                    >
                                         yaml
                                     </button>
                                 </li>
                                 <li className="mr-2">
-                                    <button onClick={onClickFileTypeTabs} id={'error'}
-                                            className={fileType === 'error' ? SELECTED_TAB : UNSELECTED_TAB}>
+                                    <button onClick={onClickFileTypeTabs}
+                                            id={'error'}
+                                            className={fileType === 'error' ? SELECTED_TAB : UNSELECTED_TAB}
+                                    >
                                         Error log
                                     </button>
                                 </li>
                             </ul>
                         </div>
                         <div className={'w-full grid pt-2 justify-items-end pb-2'}>
-                            <button className={'p-2 bg-blue-600 rounded text-white'} onClick={sendFileHandler}>
+                            <button className={'p-2 bg-blue-600 rounded text-white disabled:bg-blue-100'}
+                                    onClick={sendFileHandler}
+                                    disabled={selectedLpu?.readonly}
+                            >
                                 {
                                     fileType === 'error'
                                         ? 'Очистить лог'
