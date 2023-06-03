@@ -43,7 +43,6 @@ export default function LeftPanel() {
     let splitedLpu = lpu.split('-');
 
     const displayChildElements = (event: React.MouseEvent<HTMLButtonElement>) => {
-        debugger
         const div = event.currentTarget.parentNode as HTMLDivElement;
         const ul = div.getElementsByTagName('ul')[0]
 
