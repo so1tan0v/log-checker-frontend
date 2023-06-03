@@ -39,8 +39,8 @@ export default function LeftPanel() {
             })
         }
     }
-    const lpu= searchParams.get('lpu') ?? '';
-    let splitedLpu = lpu.split('-');
+    const selectedLpu= searchParams.get('lpu') ?? '';
+    let splitedLpu = selectedLpu.split('-');
 
     const displayChildElements = (event: React.MouseEvent<HTMLButtonElement>) => {
         const div = event.currentTarget.parentNode as HTMLDivElement;
@@ -52,6 +52,7 @@ export default function LeftPanel() {
             ul.classList.add('hidden')
         }
     }
+    const classOfSelectedItem: string = 'bg-gray-400';
 
     return (
         <aside id="cta-button-sidebar" className="fixed left-0 z-40 w-100 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
@@ -65,7 +66,7 @@ export default function LeftPanel() {
                                      <div>
                                          <button type="button"
                                                  onClick={displayChildElements}
-                                                 className="w-full flex items-center p-2 text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-300 dark:text-white dark:hover:bg-gray-500"
+                                                 className={`w-full flex items-center p-2 text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-300 dark:text-white dark:hover:bg-gray-500 ${selectedLpu === lpu.name ? classOfSelectedItem : ``}`}
                                          >
                                              <span className="flex-1 ml-3 text-left whitespace-nowrap">{lpu.titleName}</span>
                                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
@@ -82,7 +83,7 @@ export default function LeftPanel() {
                                                                  id={fullName}
                                                                  className={'w-full'}
                                                          >
-                                                             <span className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-300 dark:text-white dark:hover:bg-gray-500">
+                                                             <span className={`flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-300 dark:text-white dark:hover:bg-gray-500 ${selectedLpu === `${lpu.name}-${childLpu.name}` ? classOfSelectedItem : ``}`}>
                                                                  {childLpu.titleName}
                                                              </span>
                                                          </button>
@@ -98,7 +99,7 @@ export default function LeftPanel() {
                                  <li key={`${key}-${lpu.name}`}>
                                      <button onClick={onClickButtonHandler}
                                              id={lpu.name}
-                                             className="w-full flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500"
+                                             className={`w-full flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500 ${selectedLpu === lpu.name ? classOfSelectedItem : ``}`}
                                      >
                                         <span className="ml-3">{lpu.titleName}</span>
                                      </button>
