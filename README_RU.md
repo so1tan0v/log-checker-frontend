@@ -4,13 +4,19 @@
 --------------------------
 
 ## Установка окружения
-`npm install`
+```
+npm install
+```
 
 ## Сборка приложения
-`npm run build`
+```
+npm run build
+```
 
 ## Запуск приложения
-`npm run start`
+```
+npm run start
+```
 
 ## Настрока конфига Apache
 ```

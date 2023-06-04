@@ -4,13 +4,19 @@ This WEB-application is used to display the status of configuration files and lo
 -------------------
 
 ## Installation environment
-`npm install`
+```
+npm install
+```
 
 ## Build the application
-`npm run build`
+```
+npm run build
+```
 
 ## Run the application
-`npm run start`
+```
+npm run start
+```
 
 ## Setting up a configuration for Apache
 ```
