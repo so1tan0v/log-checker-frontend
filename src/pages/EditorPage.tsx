@@ -192,7 +192,7 @@ export default function EditorPage() {
                                 </li>
                             </ul>
                         </div>
-                        <div className={'w-full pt-2 justify-items-end pb-2 h-[50px] items-center flex justify-between px-5 text-white'}>
+                        <div className={'w-full pt-2 justify-items-end pb-2 h-[50px] items-center flex justify-between text-white'}>
                             <button className={'p-2 mr-0 bg-indigo-500  rounded text-white disabled:bg-blue-100'}
                                     onClick={getFile}
                             >
