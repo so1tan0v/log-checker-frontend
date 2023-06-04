@@ -2,16 +2,16 @@
 `npm install`
 
 ## Запуск приложения
-`npm start`
+`npm run start`
 
 ## Сборка приложения
-`npm build`
+`npm run build`
 
 ## Настрока конфига Apache
 ```
-Listen 8096
-<VirtualHost *:8096>
+Listen 8145
+<VirtualHost *:8145>
   DocumentRoot /var/www/html/log-checker/frontend
-  ProxyPass /api http://localhost:3333
+  ProxyPass /api http://localhost:3333/api
 </VirtualHost>
 ```
