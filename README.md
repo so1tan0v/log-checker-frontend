@@ -1,5 +1,6 @@
 ## About the app
-This WEB-application is used to display the status of configuration files and logs of another application, in a convenient and readable form. The application allows you to edit files.
+This WEB-application is used to display the status of configuration files and logs of another application, in a convenient and readable form. The application allows you to edit files.\
+**Backend repository**: [log-checker-backend](https://github.com/so1tan0v/log-checker-backend)
 
 -------------------
 
