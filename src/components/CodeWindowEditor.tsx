@@ -1,6 +1,6 @@
 // CodeEditorWindow.js
 
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 
 import Editor from "react-monaco-editor";
 import 'monaco-yaml/yaml.worker.js';
@@ -34,24 +34,30 @@ window.MonacoEnvironment = {
                 throw new Error(`Unknown label ${label}`);
         }
     },
+    createTrustedTypesPolicy: (_, _1) => {
+        return undefined
+    }
 };
 
-const CodeEditorWindow = ({ onChange, language, code, theme }: MonacoEditorProps) => {
-    const [value, setValue] = useState("");
+const CodeEditorWindow = React.memo(({ onChange, language, code, theme }: MonacoEditorProps) => {
+    const [value, setValue] = useState('');
 
-    if(code !== value)
-        setValue(code);
+    useEffect(() => {
+        if (code !== value) {
+            setValue(code);
+        }
+    }, [code]);
 
-    const handleEditorChange = (value: string) => {
-      setValue(value);
-      onChange("code", value);
+    const handleEditorChange = (value: any) => {
+        setValue(value);
+        onChange('code', value);
     };
 
     return (
         <div className="overlay rounded-md overflow-hidden w-full h-full shadow-4xl">
             <Editor
                 height       = "75vh"
-                width        = {`100%`}
+                width        = "100%"
                 language     = {language ?? 'yaml'}
                 value        = {value}
                 theme        = {theme}
@@ -60,5 +66,5 @@ const CodeEditorWindow = ({ onChange, language, code, theme }: MonacoEditorProps
             />
         </div>
     );
-};
+});
 export default CodeEditorWindow;

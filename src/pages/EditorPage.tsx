@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useSearchParams} from "react-router-dom";
 
 import CodeEditorWindow from "../components/CodeWindowEditor";
@@ -6,23 +6,28 @@ import Loader from "../components/Loader";
 import {SELECTED_TAB, UNSELECTED_TAB} from "../consts";
 import {isEmpty} from "lodash";
 
-import {getFileByLpuIdAndType} from "../helper";
+import {sleep} from "../helper";
 import {store} from "../store/store";
 import axios from "axios";
-// import {selectLpu} from "../store/actions";
+import {requestTimerStart} from "../store/actions";
 
 
-export default function EditorPage() {
+const EditorPage = React.memo(() => {
     let [searchParams, setSearchParams] = useSearchParams();
 
-    const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
+    const [chunkLoading, setChunkLoading] = useState(false);
     const [error, setError] = useState('');
     const [selectedLpu, setSelectedLpu] = useState({name: '', availableLpuTypes: [''], readonly: false});
 
     const lpu= searchParams.get('lpu');
     let fileType= searchParams.get('fileType') ?? 'yaml'
     let lpuType= searchParams.get('lpuType') ?? 'Амбулатория'
+
+    const [code, setCode] = useState('');
+    const oldCode = useRef(code);
+
+    const memoizedCode = useMemo(() => code, [code]);
 
     if((!selectedLpu || !selectedLpu.name || selectedLpu.name !== lpu) && lpu) {
         const selectedLpu = store.getState().availableLpu.find(item => item.name === lpu);
@@ -35,7 +40,6 @@ export default function EditorPage() {
             // selectLpu(selectedLpu);
         }
     }
-
 
     const changeCode = (action:string, data:string) => {
         switch (action) {
@@ -91,60 +95,109 @@ export default function EditorPage() {
         }
         setLoading(false);
 
-        getFile();
+        await getFile();
     }
 
-    const getFile = useCallback(() => {
-        setLoading(true)
-        setError('');
-        if(lpu)
-            getFileByLpuIdAndType(lpu, fileType, lpuType)
-                .then(fileNode => {
-                    setCode(fileNode)
-                    setLoading(false)
-                })
-                .catch(error => {
-                    setLoading(false);
-                    setError(`Произошла ошибка. Обратитесь к @sasha в ТАДАМе: \n\r ${error.message}`);
+    const [abortController, setAbortController] = useState<AbortController | null>(null);
+    const getFileContent = async () => {
+        if(lpu) {
+            const url = new URL('/api/getFileByLpuIdAndTypeNew', window.location.origin);
+            const params = new URLSearchParams();
+            params.append('id', lpu);
+            params.append('fileType', fileType);
+            params.append('lpuType', lpuType);
+            url.search = params.toString();
+
+            const currentAbortController = new AbortController();
+            setAbortController(currentAbortController);
+
+            try {
+                requestTimerStart(true);
+                const response = await fetch(url, {
+                    method : 'GET',
+                    signal : currentAbortController.signal
                 });
+                setLoading(false);
+                setChunkLoading(true);
+                if(response.body) {
+                    const reader = response.body.getReader();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            setAbortController(null);
+                            setChunkLoading(false);
+                            requestTimerStart(false);
+                            break;
+                        }
+                        const decoder = new TextDecoder('utf-8');
+                        const chunk = decoder.decode(value);
+
+                        if(chunk) {
+                            await sleep(10);
+                            setCode(oldCode.current + chunk);
+                        }
+                    }
+                }
+            } catch (e) {
+                requestTimerStart(false);
+                setCode('');
+                console.log('Запрос бы отменен');
+            }
+        }
+    }
+
+    const getFile = useCallback(async () => {
+        setCode('');
+        setLoading(true);
+        setError('');
+        if (abortController) {
+            abortController.abort(); // Отменить запрос при размонтировании компонента
+        }
+        await getFileContent()
     }, [lpu, fileType, lpuType]);
 
-    useEffect( () => {
-        getFile()
-    }, [getFile]);
+    useEffect(() => {
+        oldCode.current = code;
+    }, [code])
 
+    useEffect(() => {
+        getFile();
+    }, [lpu, fileType, lpuType])
 
-    const codeEdit = loading
-        ?  (
-            <div>
-                {fileType === 'error'
-                    &&
-                    <div className={'text-amber-700 font-bold'}>
-                        Загрузка может происходит долго, т.к файлы лога могу весить очень много. <br />Рекомендуется такие логи очищать (они не удаляются, а заменяются на пустой. Старый лог остается)
-                    </div>
-                }
-                <Loader/>
-            </div>
-        )
-        : (
-            error
-                ?  (<div className={'w-full text-amber-800 font-bold'}>
-                    {error}
-                </div>)
-                : (
-                    <div className={'pb-5'}>
-                        <div className={'w-full'}>
-                            {fileType === 'error' ? 'Текст ошибок' : 'Конфигурационный файл'}
+    const codeEdit = useMemo(() => {
+        if (loading) {
+            return (
+                <div>
+                    {fileType === 'error' &&
+                        <div className={'text-amber-700 font-bold'}>
+                            Загрузка может происходить долго, т.к файлы лога могут весить очень много. <br />Рекомендуется такие логи очищать (они не удаляются, а заменяются на пустой. Старый лог остается)
                         </div>
-                        <CodeEditorWindow
-                            code     = {code}
-                            onChange = {changeCode}
-                            language = {fileType}
-                            theme    = {'oceanic-next'}
-                        />
+                    }
+                    <Loader/>
+                </div>
+            );
+        } else if (error) {
+            return (
+                <div className={'w-full text-amber-800 font-bold'}>
+                    {error}
+                </div>
+            );
+        } else {
+            return (
+                <div className={'pb-5'}>
+                    <div className={'w-full'}>
+                        {fileType === 'error' ? 'Текст ошибок' : 'Конфигурационный файл'}
                     </div>
-                )
-        )
+                    <CodeEditorWindow
+                        code     = {memoizedCode}
+                        onChange = {changeCode}
+                        language = {fileType}
+                        theme    = {'oceanic-next'}
+                    />
+                </div>
+            );
+        }
+    }, [loading, error, fileType, memoizedCode, chunkLoading, oldCode]);
 
     return (
         <div className={'container mx-auto max-w-[50%] pt-5'}>
@@ -209,10 +262,19 @@ export default function EditorPage() {
                                 }
                             </button>
                         </div>
+                        {chunkLoading
+                            && (
+                                <div className={'text-amber-700 font-bold'}>
+                                    Файл загружен не полностью. Загрузка файла происходит частично.
+                                </div>
+                            )
+                        }
                         {codeEdit}
                     </>
                 )
             }
         </div>
     );
-}
+})
+
+export default EditorPage;
