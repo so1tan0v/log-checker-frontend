@@ -1,13 +1,17 @@
 export interface ILpu {
     titleName         : string,
     name              : string,
-    availableLpuTypes : Array<string>
+    availableLpuTypes : IAvailableLpyTypes,
     childElements     ?: Array<ILpu>
-    readonly          : boolean
 }
 
-export interface ISelectedLpu {
-    name              : string
-    availableLpuTypes : Array<string>
-    readonly          ?: boolean
+
+export interface IAvailableLpyTypes {
+    [key: string]: {
+        [key: string]: {
+            path     : string,
+            clearAll ?: boolean,
+            readonly ?: boolean
+        }
+    }
 }

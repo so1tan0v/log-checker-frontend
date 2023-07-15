@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {useSearchParams} from "react-router-dom";
 
 import CodeEditorWindow from "../components/CodeWindowEditor";
@@ -6,10 +6,10 @@ import Loader from "../components/Loader";
 import {SELECTED_TAB, UNSELECTED_TAB} from "../consts";
 import {isEmpty} from "lodash";
 
-import {sleep} from "../helper";
 import {store} from "../store/store";
 import axios from "axios";
 import {requestTimerStart} from "../store/actions";
+import {IAvailableLpyTypes} from "../interface";
 
 
 const EditorPage = React.memo(() => {
@@ -18,26 +18,28 @@ const EditorPage = React.memo(() => {
     const [loading, setLoading] = useState(false);
     const [chunkLoading, setChunkLoading] = useState(false);
     const [error, setError] = useState('');
-    const [selectedLpu, setSelectedLpu] = useState({name: '', availableLpuTypes: [''], readonly: false});
+    const [selectedLpu, setSelectedLpu] = useState<{name: string, availableLpuTypes: IAvailableLpyTypes, readonly: boolean}>({name: '', availableLpuTypes: {}, readonly: false});
+    const [usingChunk, setUsingChunk] = useState(true);
+    const [code, setCode] = useState('');
+
+    const memoizedCode = useMemo(() => code, [code]);
 
     const lpu= searchParams.get('lpu');
     let fileType= searchParams.get('fileType') ?? 'yaml'
     let lpuType= searchParams.get('lpuType') ?? 'Амбулатория'
 
-    const [code, setCode] = useState('');
-    const oldCode = useRef(code);
-
-    const memoizedCode = useMemo(() => code, [code]);
-
     if((!selectedLpu || !selectedLpu.name || selectedLpu.name !== lpu) && lpu) {
         const selectedLpu = store.getState().availableLpu.find(item => item.name === lpu);
         if(selectedLpu) {
+            let readonly = false;
+            if(fileType && lpuType && selectedLpu.availableLpuTypes[lpuType][fileType])
+                readonly = selectedLpu.availableLpuTypes[lpuType][fileType].readonly ?? false;
+
             setSelectedLpu({
                 name              : selectedLpu.name,
                 availableLpuTypes : selectedLpu.availableLpuTypes,
-                readonly          : selectedLpu.readonly
+                readonly          : readonly
             });
-            // selectLpu(selectedLpu);
         }
     }
 
@@ -64,6 +66,12 @@ const EditorPage = React.memo(() => {
 
     const onClickLpuTypeTabs = (event: any) => {
         lpuType = event.target.id
+        const selectedLpu = store.getState().availableLpu.find(item => item.name === lpu);
+        if(selectedLpu) {
+            const availableFileType = Object.keys(selectedLpu.availableLpuTypes[lpuType]);
+            if(!availableFileType.includes(fileType))
+                fileType = availableFileType[0];
+        }
         if(lpu && fileType && lpuType) {
             setSearchParams({
                 lpu,
@@ -85,7 +93,7 @@ const EditorPage = React.memo(() => {
                 id: lpu,
                 fileType,
                 lpuType,
-                node: fileType === 'error'
+                node: availableLpuTypes && availableLpuTypes[fileType]?.clearAll
                     ? ''
                     : code ?? ''
             })
@@ -101,47 +109,73 @@ const EditorPage = React.memo(() => {
     const [abortController, setAbortController] = useState<AbortController | null>(null);
     const getFileContent = async () => {
         if(lpu) {
-            const url = new URL('/api/getFileByLpuIdAndTypeNew', window.location.origin);
-            const params = new URLSearchParams();
-            params.append('id', lpu);
-            params.append('fileType', fileType);
-            params.append('lpuType', lpuType);
-            url.search = params.toString();
+            if(usingChunk) {
+                const url = new URL('/api/getFileByLpuIdAndTypeByChunk', window.location.origin);
+                const params = new URLSearchParams();
+                params.append('id', lpu);
+                params.append('fileType', fileType);
+                params.append('lpuType', lpuType);
+                url.search = params.toString();
 
-            const currentAbortController = new AbortController();
-            setAbortController(currentAbortController);
+                const currentAbortController = new AbortController();
+                setAbortController(currentAbortController);
 
-            try {
-                requestTimerStart(true);
-                const response = await fetch(url, {
-                    method : 'GET',
-                    signal : currentAbortController.signal
-                });
-                setLoading(false);
-                setChunkLoading(true);
-                if(response.body) {
-                    const reader = response.body.getReader();
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) {
-                            setAbortController(null);
-                            setChunkLoading(false);
-                            requestTimerStart(false);
-                            break;
-                        }
-                        const decoder = new TextDecoder('utf-8');
-                        const chunk = decoder.decode(value);
+                try {
+                    let fullData = '';
+                    requestTimerStart(true);
+                    const response = await fetch(url, {
+                        method : 'GET',
+                        signal : currentAbortController.signal
+                    });
+                    setLoading(false);
+                    setChunkLoading(true);
+                    let countChunkIterations = 0;
+                    if(response.body) {
+                        const reader = response.body.getReader();
+                        while (true) {
+                            countChunkIterations++;
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                setAbortController(null);
+                                setChunkLoading(false);
+                                requestTimerStart(false)
+                                setCode(fullData);
+                                break;
+                            }
+                            const decoder = new TextDecoder('utf-8');
+                            const chunk = decoder.decode(value);
 
-                        if(chunk) {
-                            await sleep(10);
-                            setCode(oldCode.current + chunk);
+                            if(chunk) {
+                                fullData += chunk;
+
+                                if(countChunkIterations === 1
+                                    || countChunkIterations % 100 === 0
+                                ) {
+                                    setCode(fullData);
+                                }
+                            }
                         }
                     }
+                } catch (e) {
+                    requestTimerStart(false);
+                    setCode('');
                 }
-            } catch (e) {
-                requestTimerStart(false);
-                setCode('');
-                console.log('Запрос бы отменен');
+            } else {
+                try {
+                    const currentAbortController = new AbortController();
+                    setAbortController(currentAbortController);
+                    requestTimerStart(true);
+                    let response = await axios.get(`/api/getFileByLpuIdAndType`, {
+                        params : {id: lpu, fileType, lpuType},
+                        signal : currentAbortController.signal
+                    });
+                    requestTimerStart(false);
+
+                    setCode(response.data);
+                } catch (e) {
+                    requestTimerStart(false);
+                    setCode('');
+                }
             }
         }
     }
@@ -154,15 +188,8 @@ const EditorPage = React.memo(() => {
             abortController.abort(); // Отменить запрос при размонтировании компонента
         }
         await getFileContent()
-    }, [lpu, fileType, lpuType]);
-
-    useEffect(() => {
-        oldCode.current = code;
-    }, [code])
-
-    useEffect(() => {
-        getFile();
-    }, [lpu, fileType, lpuType])
+        setLoading(false);
+    }, [lpu, fileType, lpuType, usingChunk]);
 
     const codeEdit = useMemo(() => {
         if (loading) {
@@ -197,10 +224,16 @@ const EditorPage = React.memo(() => {
                 </div>
             );
         }
-    }, [loading, error, fileType, memoizedCode, chunkLoading, oldCode]);
+    }, [loading, error, fileType, memoizedCode, chunkLoading]);
+
+    useEffect(() => {
+        getFile();
+    }, [lpu, fileType, lpuType])
+
+    const availableLpuTypes = selectedLpu?.availableLpuTypes[lpuType];
 
     return (
-        <div className={'container mx-auto max-w-[50%] pt-5'}>
+        <div className={'container w-full mx-auto min-w-[50%] pt-5'}>
             {isEmpty(lpu)
                 ? (
                     <div>
@@ -212,36 +245,37 @@ const EditorPage = React.memo(() => {
                         <div className={'items-center flex justify-between text-white'}>
                             <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
                                 {
-                                    selectedLpu?.availableLpuTypes?.map(item => {
+                                    Object.keys(selectedLpu?.availableLpuTypes ?? {})?.map((item: string) => {
                                         return (
                                             <li className="mr-2" key={item}>
-                                                <button onClick={onClickLpuTypeTabs}
-                                                        id={item}
-                                                        className={lpuType === item ? SELECTED_TAB : UNSELECTED_TAB}
+                                                <button onClick   = {onClickLpuTypeTabs}
+                                                        id        = {item}
+                                                        className = {lpuType === item ? SELECTED_TAB : UNSELECTED_TAB}
                                                 >
                                                     {item}
                                                 </button>
                                             </li>
-                                        )
+                                        );
                                     })
                                 }
                             </ul>
                             <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
                                 <li className="mr-2">
-                                    <button onClick={onClickFileTypeTabs}
-                                            id={'yaml'}
-                                            className={fileType === 'yaml' ? SELECTED_TAB : UNSELECTED_TAB}
-                                    >
-                                        yaml
-                                    </button>
-                                </li>
-                                <li className="mr-2">
-                                    <button onClick={onClickFileTypeTabs}
-                                            id={'error'}
-                                            className={fileType === 'error' ? SELECTED_TAB : UNSELECTED_TAB}
-                                    >
-                                        Error log
-                                    </button>
+                                    {
+                                        lpuType && availableLpuTypes
+                                            ? Object.keys(availableLpuTypes).map((type) => {
+                                                return (
+                                                    <button
+                                                        onClick={onClickFileTypeTabs}
+                                                        id={type}
+                                                        className={fileType === type ? SELECTED_TAB : UNSELECTED_TAB}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                );
+                                            })
+                                            : ''
+                                    }
                                 </li>
                             </ul>
                         </div>
@@ -251,13 +285,24 @@ const EditorPage = React.memo(() => {
                             >
                                 Обновить
                             </button>
+                            <div className={'flex p-1'}>
+                                <div className={'text-black p-1 pt-1 pr-1 rounded bg-blue-200'}>
+                                    Получать файл по частям
+                                </div>
+                                <label className="switch pl-1 ml-1">
+                                    <input type="checkbox" checked={usingChunk} onChange={() => {
+                                        setUsingChunk((prev) => !prev)}
+                                    }/>
+                                    <span className="slider-input round"></span>
+                                </label>
+                            </div>
                             <button className={'p-2 bg-blue-600 rounded text-white disabled:bg-blue-100'}
                                     onClick={sendFileHandler}
-                                    disabled={selectedLpu?.readonly}
+                                    disabled={selectedLpu?.readonly ?? false}
                             >
                                 {
-                                    fileType === 'error'
-                                        ? 'Очистить лог'
+                                    availableLpuTypes && availableLpuTypes[fileType]?.clearAll
+                                        ? 'Очистить файл'
                                         : 'Отправить'
                                 }
                             </button>

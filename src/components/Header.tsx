@@ -29,19 +29,19 @@ export function Header() {
     };
 
     const endTimer = () => {
-      if (intervalId) {
-          clearInterval(intervalId);
-      }
+        if (intervalId) {
+            clearInterval(intervalId);
+        }
 
-      setIntervalId(null);
+        setIntervalId(null);
     };
 
     return (
-      <nav className="h-[50px] items-center flex justify-between px-5 bg-blue-700 text-white">
-        <span className="font-bold">Просмотр логов и конфигурационных файлов ООО "Виста"</span>
-        <div className={'bg-neutral-300 text-black h-4/5 rounded content-center pt-1.5 pl-1 pr-1 ml-1 mr-1'}>
-          Timer <span id={'timer'}>{timer.toFixed(2)}</span>
-        </div>
-      </nav>
+        <nav className="h-[50px] items-center flex justify-between px-5 bg-blue-700 text-white">
+            <span className="font-bold">Просмотр логов и конфигурационных файлов ООО "Виста"</span>
+            <div className={'bg-blue-200 text-blue-900 h-4/5 rounded-2xl content-center pt-2 pl-1 pr-1 ml-1 mr-1'}>
+                Request timer <span id={'timer'}>{timer.toFixed(2)}</span>
+            </div>
+        </nav>
     );
 }

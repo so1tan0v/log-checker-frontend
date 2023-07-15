@@ -21,16 +21,15 @@ export default function LeftPanel() {
         const mainId = id.split('-');
         const selectedLpu = store.getState().availableLpu.find(item => item.name === mainId[0]);
         if(selectedLpu) {
-            // selectLpu({
-            //     name: selectedLpu.name,
-            //     availableLpuTypes: selectedLpu.availableLpuTypes
-            // });
-
-            const fileType = searchParams.get('fileType') ?? 'yaml';
             const searchLpuType = searchParams.get('lpuType') ?? ''
-            let lpuType = searchLpuType && selectedLpu.availableLpuTypes.includes(searchLpuType)
+            let lpuType = searchLpuType && Object.keys(selectedLpu.availableLpuTypes).includes(searchLpuType)
                 ? searchLpuType
-                : selectedLpu.availableLpuTypes[0];
+                : Object.keys(selectedLpu.availableLpuTypes)[0];
+
+            const availableFileType = Object.keys(selectedLpu.availableLpuTypes[lpuType]);
+            let fileType = searchParams.get('fileType') ?? 'yaml';
+            if(!availableFileType.includes(fileType))
+                fileType = availableFileType[0];
 
             setSearchParams({
                 lpu: id,
