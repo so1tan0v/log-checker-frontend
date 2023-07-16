@@ -1,7 +1,6 @@
 import React, {useState} from "react";
 import {useSearchParams} from "react-router-dom";
 
-// import {selectLpu} from "../store/actions";
 import {getAvailableLpu} from "../helper";
 import {store} from "../store/store";
 import Loader from "./Loader";
@@ -19,14 +18,17 @@ export default function LeftPanel() {
     const onClickButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
         const id = event.currentTarget.id;
         const mainId = id.split('-');
-        const selectedLpu = store.getState().availableLpu.find(item => item.name === mainId[0]);
+        let selectedLpu = store.getState().availableLpu.find(item => item.name === mainId[0]);
+        if(mainId.length > 1) {
+            selectedLpu = selectedLpu?.childElements?.find(item => item.name === mainId[1]);
+        }
         if(selectedLpu) {
             const searchLpuType = searchParams.get('lpuType') ?? ''
-            let lpuType = searchLpuType && Object.keys(selectedLpu.availableLpuTypes).includes(searchLpuType)
+            let lpuType = searchLpuType && Object.keys(selectedLpu.category).includes(searchLpuType)
                 ? searchLpuType
-                : Object.keys(selectedLpu.availableLpuTypes)[0];
+                : Object.keys(selectedLpu.category)[0];
 
-            const availableFileType = Object.keys(selectedLpu.availableLpuTypes[lpuType]);
+            const availableFileType = Object.keys(selectedLpu.category[lpuType]);
             let fileType = searchParams.get('fileType') ?? 'yaml';
             if(!availableFileType.includes(fileType))
                 fileType = availableFileType[0];
@@ -54,7 +56,7 @@ export default function LeftPanel() {
     const classOfSelectedItem: string = 'bg-gray-400';
 
     return (
-        <aside id="cta-button-sidebar" className="fixed left-0 z-40 w-100 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+        <aside id="cta-button-sidebar" className="left-0 z-40 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
             {loading && <Loader />}
             <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
                 <ul className="space-y-2 font-medium">

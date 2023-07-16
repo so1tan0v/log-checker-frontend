@@ -10,11 +10,13 @@ function App() {
     return (
         <>
             <Header />
-            <LeftPanel />
-            <Routes>
-                <Route path={'/'} element={<EditorPage />}/>
-                <Route path={'/:id/:type'} element={<EditorPage />}/>
-            </Routes>
+            <div className={'flex'}>
+                <LeftPanel />
+                <Routes>
+                    <Route path={'/'} element={<EditorPage />}/>
+                    <Route path={'/:id/:type'} element={<EditorPage />}/>
+                </Routes>
+            </div>
         </>
     );
 }

@@ -1,8 +1,8 @@
-// CodeEditorWindow.js
-
 import React, {useEffect, useState} from "react";
-
+import EventEmitter from "event-emitter";
 import Editor from "react-monaco-editor";
+import {debounce} from "lodash";
+
 import 'monaco-yaml/yaml.worker.js';
 import {setDiagnosticsOptions} from "monaco-yaml";
 
@@ -39,6 +39,17 @@ window.MonacoEnvironment = {
     }
 };
 
+const eventEmitter = EventEmitter();
+const eventName = 'contentWidthChanged';
+
+export const subscribe = (handler: () => void) => {
+    eventEmitter.on(eventName, handler);
+    return () => eventEmitter.off(eventName, handler);
+}
+
+export const trigger = () => eventEmitter.emit(eventName);
+
+
 const CodeEditorWindow = React.memo(({ onChange, language, code, theme }: MonacoEditorProps) => {
     const [value, setValue] = useState('');
 
@@ -52,6 +63,12 @@ const CodeEditorWindow = React.memo(({ onChange, language, code, theme }: Monaco
         setValue(value);
         onChange('code', value);
     };
+
+    useEffect(() => {
+        const debounced = debounce(trigger, 300);
+        window.addEventListener('resize', debounced);
+        return () => window.removeEventListener('resize', debounced);
+    }, []);
 
     return (
         <div className="overlay rounded-md overflow-hidden w-full h-full shadow-4xl">

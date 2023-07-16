@@ -22,8 +22,14 @@ function availableLpuReducer(state = initAvailableLpuState, action: {type: strin
       }
 }
 
+export interface RootState {
+    availableLpu      : Array<ILpu>
+    requestTimerStart : boolean
+}
+
+
 export const rootReducer = combineReducers({
     // selectLpu    : selectLpuReducer,
     availableLpu      : availableLpuReducer,
     requestTimerStart : timerReducer
-})
+});

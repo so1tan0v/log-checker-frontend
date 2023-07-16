@@ -1,10 +1,9 @@
 export interface ILpu {
     titleName         : string,
     name              : string,
-    availableLpuTypes : IAvailableLpyTypes,
+    category          : IAvailableLpyTypes,
     childElements     ?: Array<ILpu>
 }
-
 
 export interface IAvailableLpyTypes {
     [key: string]: {
@@ -14,4 +13,9 @@ export interface IAvailableLpyTypes {
             readonly ?: boolean
         }
     }
+}
+
+export interface ISelectedLpu {
+    name: string,
+    category: IAvailableLpyTypes
 }
