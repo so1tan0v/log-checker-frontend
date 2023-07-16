@@ -35,6 +35,13 @@ const EditorPage = React.memo(() => {
     }
     const category = storeSelectedLpu?.category;
 
+    const readonly = useMemo(() => {
+        if (fileType && category && category.hasOwnProperty(lpuType)) {
+            return category[lpuType][fileType].readonly || false;
+        }
+        return false;
+    }, [fileType, category, lpuType, lpu]);
+
     const changeCode = useCallback((action: string, data: string) => {
         switch (action) {
             case "code":
@@ -182,7 +189,7 @@ const EditorPage = React.memo(() => {
         }
         await getFileContent();
         setLoading(false);
-    }, [lpu, fileType, lpuType, usingChunk, abortController, getFileContent]);
+    }, [lpu, fileType, lpuType, usingChunk, abortController, getFileContent, readonly]);
 
     const codeEdit = useMemo(() => {
         if (loading) {
@@ -222,13 +229,6 @@ const EditorPage = React.memo(() => {
     useEffect(() => {
         getFile();
     }, [lpu, fileType, lpuType])
-
-    const readonly = useMemo(() => {
-        if (fileType && category && category.hasOwnProperty(fileType)) {
-            return !!category[fileType].readonly || false;
-        }
-        return false;
-    }, [fileType, category]);
 
     return (
         <div className={'justify-center w-full mx-auto max-w-[70%] pt-5'}>
