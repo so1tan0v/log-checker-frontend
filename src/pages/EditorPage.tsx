@@ -157,6 +157,7 @@ const EditorPage = React.memo(() => {
                         }
                     }
                 } catch (e) {
+                    setLoading(false);
                     requestTimerStart(false);
                     setCode('');
                 }
@@ -173,6 +174,7 @@ const EditorPage = React.memo(() => {
 
                     setCode(response.data);
                 } catch (e) {
+                    setLoading(false);
                     requestTimerStart(false);
                     setCode('');
                 }
@@ -181,14 +183,15 @@ const EditorPage = React.memo(() => {
     }, [lpu, fileType, lpuType, usingChunk]);
 
     const getFile = useCallback(async () => {
+        if (abortController) {
+            await abortController.abort(); // Отменить запрос при размонтировании компонента
+        }
         setCode("");
         setLoading(true);
         setError("");
-        if (abortController) {
-            abortController.abort(); // Отменить запрос при размонтировании компонента
-        }
         await getFileContent();
         setLoading(false);
+        requestTimerStart(false);
     }, [lpu, fileType, lpuType, usingChunk, abortController, getFileContent, readonly]);
 
     const codeEdit = useMemo(() => {

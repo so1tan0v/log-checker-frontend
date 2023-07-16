@@ -17,6 +17,7 @@ export function Header() {
 
     let starTimestamp = new Date().getTime();
     const startTimer = () => {
+        endTimer();
         setTimer(0.0);
         const intId = setInterval(() => {
             const time = new Date().getTime();
