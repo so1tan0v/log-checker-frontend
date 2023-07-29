@@ -1,35 +1,23 @@
 import {combineReducers} from "redux";
+
+import {availableLpuReducer} from "./lpuReducer";
+
 import {ILpu} from "../interface";
-import {AVAILABLE_LPU, TIMER} from "../consts";
+import {appReducer, IAppReducer} from "./appReducer";
+import {ThunkDispatch} from "redux-thunk";
+import {AvailableLpuAction} from "./actions";
 
-const initTimerState: boolean = false;
-function timerReducer(state: boolean = initTimerState, action: {type: string, payload: boolean}) {
-    switch (action.type) {
-        case TIMER:
-          return action.payload
-        default:
-          return state
-      }
-}
+export type AppDispatch = ThunkDispatch<IRootState, unknown, AvailableLpuAction>;
 
-const initAvailableLpuState: Array<ILpu> = [];
-function availableLpuReducer(state = initAvailableLpuState, action: {type: string, payload: Array<ILpu>}) {
-    switch (action.type) {
-        case AVAILABLE_LPU:
-          return action.payload
-        default:
-          return state
-      }
-}
 
-export interface RootState {
+export interface IRootState {
     availableLpu      : Array<ILpu>
-    requestTimerStart : boolean
+    app               : IAppReducer,
+    // selectedLpu       : string
 }
-
 
 export const rootReducer = combineReducers({
-    // selectLpu    : selectLpuReducer,
-    availableLpu      : availableLpuReducer,
-    requestTimerStart : timerReducer
+    availableLpu : availableLpuReducer,
+    app          : appReducer,
+    // selectedLpu  : selectedLpu,
 });
