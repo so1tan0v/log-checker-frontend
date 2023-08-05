@@ -11,9 +11,12 @@ function MainPage() {
 
     useEffect(() => {
         if (location.pathname === '/') {
-            navigate(`/editor${location.search}`);
+            const search = window.location.search;
+            history.pushState({}, document.title, window.location.pathname);
+            navigate(`editor${search}`);
         }
     }, [navigate, location]);
+
 
 
     return (
