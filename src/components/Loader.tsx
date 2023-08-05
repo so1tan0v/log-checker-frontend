@@ -7,17 +7,17 @@ export default function Loader() {
     const visible = useSelector((state: IRootState) => state.app.loader)
 
     return (
-        <div className={'fixed top-[50%] left-[50%] z-50'}>
+        <div className={'fixed inset-0 pointer-events-none flex justify-center items-center'}>
             <Oval
-                height               = {100}
-                width                = {100}
+                height               = {150}
+                width                = {150}
                 color                = "#0366fc"
                 secondaryColor       = "#03a9fc"
                 wrapperStyle         = {{}}
                 wrapperClass         = ""
                 visible              = {visible}
                 ariaLabel            = 'otval-loading'
-                strokeWidth          = {2}
+                strokeWidth          = {1}
                 strokeWidthSecondary = {2}
             />
         </div>
