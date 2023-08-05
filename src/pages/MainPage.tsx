@@ -17,8 +17,6 @@ function MainPage() {
         }
     }, [navigate, location]);
 
-
-
     return (
         <>
             <Header />

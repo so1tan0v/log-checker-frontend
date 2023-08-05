@@ -1,6 +1,7 @@
 import axios from "axios";
 import {store} from "./index";
 import {requestTimerStart, setLoader} from "./store/actions";
+import {isEmpty} from "lodash";
 
 export async function getAvailableLpu() {
     return (await axios.get(`/api/getAvailableLpu`)).data;
@@ -18,6 +19,8 @@ export function getLpuById(lpuId: string) {
     if(mainId.length > 1) {
         selectedLpu = selectedLpu?.childElements?.find(item => item.name === mainId[1]);
     }
+    if(selectedLpu?.childElements && mainId.length === 1)
+        return null;
 
     return selectedLpu;
 }
