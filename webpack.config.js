@@ -23,7 +23,7 @@ module.exports = {
                     options: {
                         compilerOptions: {
                             noEmit: false
-                        },
+                        }
                     }
                 }
             },
