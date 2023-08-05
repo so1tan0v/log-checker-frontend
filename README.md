@@ -1,29 +1,15 @@
-## About the application
-This WEB-application is used to display the status of configuration files and logs of another application, in a convenient and readable form. The application allows you to edit files.\
-**Backend repository**: [log-checker-backend](https://github.com/so1tan0v/log-checker-backend)
+# 🚀 Welcome to your new awesome project!
 
--------------------
+This project has been created using **webpack-cli**, you can now run
 
-## Installation environment
-```
-npm install
-```
-
-## Build the application
 ```
 npm run build
 ```
 
-## Run the application
+or
+
 ```
-npm run start
+yarn build
 ```
 
-## Setting up a configuration for Apache
-```
-Listen 8145
-<VirtualHost *:8145>
-  DocumentRoot /var/www/html/log-checker/frontend
-  ProxyPass /api http://localhost:3333/api
-</VirtualHost>
-```
+to bundle your application

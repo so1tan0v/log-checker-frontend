@@ -50,7 +50,7 @@ export const subscribe = (handler: () => void) => {
 export const trigger = () => eventEmitter.emit(eventName);
 
 
-const CodeEditorWindow = React.memo(({ onChange, language, code, theme }: MonacoEditorProps) => {
+const CodeEditorComponent = React.memo(({ onChange, language, code, theme }: MonacoEditorProps) => {
     const [value, setValue] = useState('');
 
     useEffect(() => {
@@ -84,4 +84,4 @@ const CodeEditorWindow = React.memo(({ onChange, language, code, theme }: Monaco
         </div>
     );
 });
-export default CodeEditorWindow;
+export default CodeEditorComponent;

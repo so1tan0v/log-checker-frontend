@@ -63,3 +63,7 @@ input:checked + .slider-input:before {
 .slider-input.round:before {
     border-radius: 50%;
 }
+
+.full-screen-minus-50px {
+    height: calc(100vh - 50px)!important;
+}

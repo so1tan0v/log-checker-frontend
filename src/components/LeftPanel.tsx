@@ -47,7 +47,7 @@ export default function LeftPanel() {
     }
 
     return (
-        <aside id="cta-button-sidebar" className="left-0 z-40 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+        <aside id="cta-button-sidebar" className="left-0 z-40 full-screen-minus-50px transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
             <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 ">
                 <ul className="space-y-2 font-medium">
                      {availableLpu?.map((lpu, key) => {
@@ -94,7 +94,7 @@ export default function LeftPanel() {
                                  <li key={`${key}-${lpu.name}`}>
                                      <button onClick   = {onClickButtonHandler}
                                              id        = {lpu.name}
-                                             className = {`w-full flex items-center p-2 text-gray-900 rounded-lg ${selectedLpu === lpu.name ? classOfSelectedItem : ``}`}
+                                             className = {`w-full flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-300 ${selectedLpu === lpu.name ? classOfSelectedItem : ``}`}
                                      >
                                         <span className="ml-3">
                                             {lpu.titleName}

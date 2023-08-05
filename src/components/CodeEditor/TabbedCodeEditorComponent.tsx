@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import CodeEditorWindow from "./CodeWindowEditor";
+import CodeEditorComponent from "./CodeEditorComponent";
 import axios from "axios";
 
 import {getFileContent, getLpuById} from "../../helper";
@@ -21,7 +21,7 @@ const jsonStyle = {
     numberStyle   : {color: 'darkorange'}
 }
 
-const CodeEditor = (props: CodeEditorProps) => {
+const TabbedCodeEditorComponent = (props: CodeEditorProps) => {
     const {
         lpu,
         lpuType,
@@ -86,12 +86,12 @@ const CodeEditor = (props: CodeEditorProps) => {
     }, [lpu, fileType, lpuType, code, category, readonly]);
 
     const getFile = useCallback(async () => {
-        if (abortController) {
+        if (abortController)
             await abortController.abort();
-        }
+
         setCode("");
-        dispatch(setLoader(true));
         setError("");
+        dispatch(setLoader(true));
         await getFileContent({
             lpu,
             fileType,
@@ -110,7 +110,7 @@ const CodeEditor = (props: CodeEditorProps) => {
     }, [lpu, fileType, lpuType]);
 
 
-    const codeEdit = useMemo(() => {
+    const CodeEditorBlock = useMemo(() => {
         if (loading) {
             return (
                 <div>
@@ -135,7 +135,7 @@ const CodeEditor = (props: CodeEditorProps) => {
         } else {
             return (
                 <div className={'pb-5'}>
-                    <CodeEditorWindow
+                    <CodeEditorComponent
                         code     = {code}
                         onChange = {changeCode}
                         language = {fileType}
@@ -147,7 +147,7 @@ const CodeEditor = (props: CodeEditorProps) => {
     }, [error, code, chunkLoading, loading, readonly]);
 
     return (
-        <div className={'justify-center w-full mx-auto max-w-[70%] pt-5'}>
+        <div className={'justify-center w-full mx-auto max-w-[100%] pt-5'}>
             <div className={'w-full pt-2 justify-items-end pb-2 h-[50px] items-center flex justify-between text-white'}>
                 <button className = {'p-2 mr-0 bg-indigo-500  rounded text-white disabled:bg-blue-100'}
                         onClick   = {getFile}
@@ -193,9 +193,9 @@ const CodeEditor = (props: CodeEditorProps) => {
                     </div>
                 )
             }
-            {codeEdit}
+            {CodeEditorBlock}
         </div>
     );
 }
 
-export default CodeEditor;
+export default TabbedCodeEditorComponent;
